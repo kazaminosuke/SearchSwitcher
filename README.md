@@ -1,21 +1,63 @@
-## GoogleToBing_Edge
-EdgeブラウザでGoogleとBingを切り替える拡張機能です。
+# Search Link Configurator (旧 GoogleToBing_Edge)
 
-対応内容:
+`Search Link Configurator` は、あらゆる検索エンジン間でシームレスな切り替えを実現する、高度にカスタマイズ可能なブラウザ拡張機能です。
 
-検索
-画像
-ニュース
-動画
+検索結果ページに表示されるフローティングボタンをクリックするだけで、GoogleからBingへ、BingからDuckDuckGoへ、あるいはあなたが設定した任意の検索エンジンへ、ワンクリックで同じ検索結果を渡すことができます。
 
-これは、[GoogleToBing](https://github.com/whyi/GoogleToBing)の[非公式フォーク](https://github.com/ambigoNate/GoogleToBing_Edge)の[非公式フォーク](https://github.com/kazaminosuke/GoogleToBing_Edge)であり、さらにその原本(GoogleToBing)は[Google Chromeウェブストアの拡張機能](https://chrome.google.com/webstore/detail/google-to-bing/paognpekndknfamofcjkddficmghjcjo?utm_source=chrome-app-launcher-info-dialog)に基づいています。ただし、現在Googleストアでは入手できないと思われます。
-
-## 更新履歴:
-* Google/Bingニュースへの対応を追加.
-* Google/Bing動画への対応を追加.
-* Manifestv3へ対応(チャットGPTによる編集).
+**この拡張機能の最大の特徴は、その圧倒的なカスタマイズ性です。**
+グラフィカルな設定画面で、どのサイトからどのサイトへ切り替えるかのナビゲーションルートを、ユーザーが自由に設計できます。
 
 
+*(注: ここにオプションページのスクリーンショット画像のURLを挿入してください)*
 
+## 主な機能
 
+*   **マルチエンジン対応**:
+    *   Google, Bing, DuckDuckGo, Ecosia, Startpage, Wikipedia, アンサイクロペディアを標準プリセットとして搭載。
+    *   エンジン管理ページから、URLや識別子を自分で設定して、**あらゆる検索エンジンを自由に追加・編集・削除**できます。
 
+*   **高度なリンク設定**:
+    *   「GoogleからはBingとDuckDuckGoへ」「BingからはGoogleのみへ」といった、**エンジンごとの非対称な切り替えルート**を直感的なUIで設定可能。
+    *   フローティングボタンとして表示するリンクを最大2つまで選択できます。
+
+*   **多様な検索タイプに対応**:
+    *   ウェブ検索だけでなく、**画像、動画、ニュース検索**の切り替えにも対応。Googleの画像検索から、直接Bingの画像検索へ移動できます。
+    *   各検索エンジンのタイプ別URLも個別に設定可能です。
+
+*   **設定の共有とバックアップ**:
+    *   「ハブ＆スポーク型」「リング型」などの代表的なリンク設定をワンクリックで適用できる**定義済みプリセット**。
+    *   自分だけのリンク設定を名前をつけて保存できる**カスタムプリセット機能**。
+    *   カスタムプリセット設定をJSONファイルとして**エクスポート＆インポート**でき、バックアップや他のユーザーとの共有が簡単です。
+
+## 更新履歴
+
+*   **v3.0**: **全面的な機能刷新とUIの近代化**
+    *   **汎用化**: Google/Bing以外の検索エンジンもユーザーが自由に追加・編集・削除できる構造に刷新。
+    *   **新UI**: 設定ページを「リンク設定」と「エンジン管理」の2つに分割し、グラフィカルで直感的な操作を実現。
+    *   **高度なリンク設定**: エンジンごとに表示する切り替え先ボタンを個別に設定できる機能を追加。
+    *   **プリセット機能**: リンク設定をワンクリックで適用したり、独自の設定を保存・復元・共有（エクスポート/インポート）する機能を追加。
+    *   **マルチボタン表示**: 複数の切り替え先ボタンを同時に表示する機能に対応。
+    *   **対応エンジン拡充**: DuckDuckGo, Ecosia, Startpage, Wikipedia, アンサイクロペディアを標準プリセットに追加。
+
+*   **v2.0**: (旧GoogleToBing)
+    *   Manifest V3に対応。
+    *   Google/Bingのニュース検索、動画検索への切り替えに対応。
+
+## プロジェクトの歴史
+
+この拡張機能は、元々GoogleとBingの2つのエンジンを切り替えるシンプルなツールでした。その原型は[Google Chromeウェブストアの拡張機能](https://chrome.google.com/webstore/detail/google-to-bing/paognpekndknfamofcjkddficmghjcjo)にあり、[whyi/GoogleToBing](https://github.com/whyi/GoogleToBing) を経て、複数の開発者によるフォーク ([ambigoNate/GoogleToBing_Edge](https://github.com/ambigoNate/GoogleToBing_Edge), [kazaminosuke/GoogleToBing_Edge](https://github.com/kazaminosuke/GoogleToBing_Edge)) によって進化してきました。
+
+本バージョン(v3.0)では、その基本思想を受け継ぎつつ、あらゆる検索エンジンに対応するための抜本的な機能拡張とUIの全面的な刷新を行いました。
+
+## インストール方法
+
+1.  このリポジトリをZIPファイルとしてダウンロードし、解凍します。
+2.  お使いのブラウザ（Chrome, Edgeなど）で拡張機能管理ページ（`chrome://extensions` または `edge://extensions`）を開きます。
+3.  「デベロッパー モード」をオンにします。
+4.  「パッケージ化されていない拡張機能を読み込む」ボタンをクリックし、解凍したフォルダを選択します。
+
+## 設定方法
+
+1.  インストール後、ブラウザのツールバーに表示される拡張機能のアイコンをクリックすると、「リンク設定」ページが開きます。
+2.  ページ下部の「エンジンリストを管理する」ボタンをクリックすると、エンジンの追加・編集・削除ができる管理ページに移動します。
+3.  エンジンを追加・設定した後、「リンク設定」ページに戻り、各エンジンからの切り替え先を設定してください。
