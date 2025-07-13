@@ -1,4 +1,4 @@
-// SearchSwitcher.js (with Wikipedia/Uncyclopedia support)
+// SearchSwitcher.js (Final Optimized Version)
 
 (function() {
     if (window.hasRunSearchSwitcher) return;
@@ -10,6 +10,7 @@
     };
     let currentEngine = null;
 
+    // --- 1. 設定読み込みから6. UI生成までの関数群 (変更なし) ---
     function loadConfig() {
         return new Promise(resolve => {
             chrome.storage.sync.get(['engines', 'buttonPosition'], (items) => {
@@ -19,13 +20,11 @@
             });
         });
     }
-
     function findCurrentEngine() {
         const hostname = location.hostname;
         if (!config.engines) return null;
         return config.engines.find(engine => hostname.includes(engine.host_pattern));
     }
-
     function getParameterByName(name, urlString) {
         if (!urlString) urlString = window.location.href;
         try {
@@ -38,7 +37,6 @@
             return params.get(name);
         } catch (e) { return null; }
     }
-
     function getCurrentSearchType(engine) {
         const urlString = window.location.href;
         const path = window.location.pathname;
@@ -58,7 +56,6 @@
         }
         return 'web';
     }
-
     function generateTargetLinks(currentEngine, currentSearchType, query) {
         if (!query || !currentEngine.allowed_targets || !Array.isArray(currentEngine.allowed_targets)) return [];
         const links = [];
@@ -77,9 +74,10 @@
         });
         return links;
     }
-
     function createOrUpdateUI(links) {
-        $('#search-switcher-container').remove();
+        // ボタンが既に存在する場合は、再生成しない（パフォーマンス向上）
+        if ($('#search-switcher-container').length > 0) return;
+        
         if (links.length === 0) return;
         const container = $('<div id="search-switcher-container"></div>');
         links.forEach(link => {
@@ -103,16 +101,14 @@
         $('body').append(container);
     }
     
+    // --- メインの実行関数 ---
     const run = () => {
         if (!currentEngine) return;
-        
         let query;
-
         switch (currentEngine.id) {
             case 'startpage':
                 query = $('#q').val() || $('#query').val();
                 break;
-
             case 'wikipedia_ja':
             case 'uncyclopedia_ja':
                 const path = window.location.pathname;
@@ -121,62 +117,75 @@
                 } else {
                     query = getParameterByName(currentEngine.query_param);
                 }
-                if (!query) {
-                    query = $('h1#firstHeading, h1.page-title-main').text();
-                }
-                if (!query) {
-                    query = $('#searchInput').val();
-                }
+                if (!query) query = $('h1#firstHeading, h1.page-title-main').text();
+                if (!query) query = $('#searchInput').val();
                 break;
-
             default:
                 query = getParameterByName(currentEngine.query_param);
                 break;
         }
-
         if (!query || query.trim() === '') {
             $('#search-switcher-container').remove();
             return;
         }
-
         const currentSearchType = getCurrentSearchType(currentEngine);
         const links = generateTargetLinks(currentEngine, currentSearchType, query);
         createOrUpdateUI(links);
     };
 
+    // --- 初期化と監視のロジック (最適化版) ---
     async function initialize() {
         await loadConfig();
         currentEngine = findCurrentEngine();
         if (!currentEngine) return;
 
+        // 1. まず即座に実行を試みる
         run();
 
+        // 2. DOMの変更を監視して、ボタンが消されたら再生成する
         const observer = new MutationObserver((mutations) => {
             for (const mutation of mutations) {
-                if (mutation.removedNodes) {
-                    for (const node of mutation.removedNodes) {
-                        if (node.id === 'search-switcher-container') {
-                            run();
-                            return;
-                        }
+                if (mutation.removedNodes.length) {
+                    // bodyから直接削除されたか、または他の要素の子として削除されたか
+                    let containerRemoved = Array.from(mutation.removedNodes).some(node => 
+                        node.id === 'search-switcher-container' || (node.querySelector && node.querySelector('#search-switcher-container'))
+                    );
+                    if (containerRemoved && $('#search-switcher-container').length === 0) {
+                        run();
+                        return; // 一度の変更で複数回実行されるのを防ぐ
                     }
                 }
             }
         });
+
         observer.observe(document.body, { childList: true, subtree: true });
 
+        // 3. URL自体が変わった場合（SPAでの画面遷移）も考慮
         let lastUrl = location.href;
-        setInterval(() => {
+        new MutationObserver(() => {
             if (location.href !== lastUrl) {
                 lastUrl = location.href;
                 currentEngine = findCurrentEngine();
-                run();
+                // ページ遷移直後はDOMが不安定なことがあるので少し待つ
+                setTimeout(run, 100);
             }
-        }, 500);
+        }).observe(document.head, { childList: true, subtree: true }); // headの変更（titleなど）を監視
     }
 
+    // DOMの準備ができ次第、初期化処理を開始
     $(document).ready(function() {
-        setTimeout(initialize, 500);
+        // body要素が確実に存在してから監視を開始するために少し待つ
+        if (document.body) {
+            initialize();
+        } else {
+            const readyObserver = new MutationObserver(() => {
+                if (document.body) {
+                    initialize();
+                    readyObserver.disconnect();
+                }
+            });
+            readyObserver.observe(document.documentElement, { childList: true });
+        }
     });
 
 })();
