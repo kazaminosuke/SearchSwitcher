@@ -1,4 +1,4 @@
-// SearchSwitcher.js (Final Optimized Version)
+// SearchSwitcher.js (Enhanced SPA Support)
 
 (function() {
     if (window.hasRunSearchSwitcher) return;
@@ -9,8 +9,8 @@
         buttonPosition: { bottom: 20, right: 20 }
     };
     let currentEngine = null;
+    let runTimeout = null;
 
-    // --- 1. 設定読み込みから6. UI生成までの関数群 (変更なし) ---
     function loadConfig() {
         return new Promise(resolve => {
             chrome.storage.sync.get(['engines', 'buttonPosition'], (items) => {
@@ -74,10 +74,9 @@
         });
         return links;
     }
+
     function createOrUpdateUI(links) {
-        // ボタンが既に存在する場合は、再生成しない（パフォーマンス向上）
-        if ($('#search-switcher-container').length > 0) return;
-        
+        $('#search-switcher-container').remove();
         if (links.length === 0) return;
         const container = $('<div id="search-switcher-container"></div>');
         links.forEach(link => {
@@ -101,7 +100,6 @@
         $('body').append(container);
     }
     
-    // --- メインの実行関数 ---
     const run = () => {
         if (!currentEngine) return;
         let query;
@@ -133,48 +131,23 @@
         createOrUpdateUI(links);
     };
 
-    // --- 初期化と監視のロジック (最適化版) ---
     async function initialize() {
         await loadConfig();
         currentEngine = findCurrentEngine();
         if (!currentEngine) return;
-
-        // 1. まず即座に実行を試みる
         run();
-
-        // 2. DOMの変更を監視して、ボタンが消されたら再生成する
-        const observer = new MutationObserver((mutations) => {
-            for (const mutation of mutations) {
-                if (mutation.removedNodes.length) {
-                    // bodyから直接削除されたか、または他の要素の子として削除されたか
-                    let containerRemoved = Array.from(mutation.removedNodes).some(node => 
-                        node.id === 'search-switcher-container' || (node.querySelector && node.querySelector('#search-switcher-container'))
-                    );
-                    if (containerRemoved && $('#search-switcher-container').length === 0) {
-                        run();
-                        return; // 一度の変更で複数回実行されるのを防ぐ
-                    }
-                }
-            }
-        });
-
-        observer.observe(document.body, { childList: true, subtree: true });
-
-        // 3. URL自体が変わった場合（SPAでの画面遷移）も考慮
         let lastUrl = location.href;
         new MutationObserver(() => {
             if (location.href !== lastUrl) {
                 lastUrl = location.href;
                 currentEngine = findCurrentEngine();
-                // ページ遷移直後はDOMが不安定なことがあるので少し待つ
-                setTimeout(run, 100);
+                if (runTimeout) clearTimeout(runTimeout);
+                runTimeout = setTimeout(run, 300); 
             }
-        }).observe(document.head, { childList: true, subtree: true }); // headの変更（titleなど）を監視
+        }).observe(document.documentElement, { childList: true, subtree: true });
     }
 
-    // DOMの準備ができ次第、初期化処理を開始
     $(document).ready(function() {
-        // body要素が確実に存在してから監視を開始するために少し待つ
         if (document.body) {
             initialize();
         } else {
