@@ -1,0 +1,4 @@
+// background.js
+chrome.action.onClicked.addListener((tab) => {
+  chrome.runtime.openOptionsPage();
+});

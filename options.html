@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search Switcher リンク設定</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="options_style.css">
+</head>
+<body>
+
+<h1>Search Switcher リンク設定</h1>
+<p>各検索エンジンで検索した際に、どのエンジンへの切り替えボタンを表示するかを設定します。</p>
+
+<div class="preset-management">
+    <h3>リンク設定プリセット</h3>
+    <p>代表的なリンク設定をワンクリックで適用したり、独自の設定を保存・復元できます。</p>
+    
+    <h4>代表的な設定パターン</h4>
+    <div class="preset-buttons">
+        <button class="apply-preset-btn" data-preset-type="hub-spoke">ハブ＆スポーク型 (Google中心)</button>
+        <button class="apply-preset-btn" data-preset-type="ring">リング型 (巡回)</button>
+        <button class="apply-preset-btn" data-preset-type="full-mesh">フルメッシュ型 (相互リンク)</button>
+    </div>
+
+    <hr class="subtle-hr">
+
+    <h4>カスタムプリセット</h4>
+    <div>
+        <input type="text" id="custom-preset-name" placeholder="新しいプリセット名を入力">
+        <button id="save-custom-preset-btn">現在のリンク設定を保存</button>
+    </div>
+    <div style="margin-top: 15px;">
+        <select id="custom-preset-select"><option value="">-- 保存したプリセットを読み込む --</option></select>
+        <button id="load-custom-preset-btn">読み込む</button>
+        <button id="delete-custom-preset-btn" class="delete-btn">削除</button>
+    </div>
+
+    <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px;">
+        <h4>設定のエクスポート＆インポート</h4>
+        <p style="font-size: 12px; color: #555;">現在のカスタムプリセット設定をファイルに保存したり、ファイルから読み込んだりできます。</p>
+        <button id="export-presets-btn">エクスポート</button>
+        <button id="import-presets-btn">インポート</button>
+        <!-- インポート処理用の非表示のinput要素 -->
+        <input type="file" id="import-file-input" style="display: none;" accept=".json,application/json">
+    </div>
+</div>
+
+
+<div id="link-config-container" class="link-config-container">
+    <!-- UIはJavaScriptで動的に生成されます -->
+</div>
+
+<hr>
+
+<div class="footer-actions">
+    <button id="edit-engines-btn">エンジンリストを管理する (追加/編集/削除)</button>
+</div>
+
+<script src="js/jquery-1.11.2.min.js"></script>
+<script src="options.js"></script>
+
+</body>
+</html>

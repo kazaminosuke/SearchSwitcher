@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search Switcher エンジン管理</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="options_style.css">
+</head>
+<body>
+
+<h1>Search Switcher - エンジン管理</h1>
+<p>ここで、検索エンジンの追加、編集、削除を行います。</p>
+
+<div class="form-section-wrapper">
+    <h2>デフォルトプリセットから追加</h2>
+    <div id="preset-container" class="presets">
+        <!-- プリセットカードがここに動的に生成されます -->
+    </div>
+</div>
+
+<div class="form-section-wrapper">
+    <h2>検索エンジンの追加・編集</h2>
+    <form id="engine-form" class="form">
+        <input type="hidden" id="engine-id-hidden"> <!-- 編集中の元のIDを保持 -->
+        <div class="form-grid full-width">
+            <div><label for="name">エンジン名</label><input type="text" id="name" placeholder="例: Google" required></div>
+            <div><label for="id">ユニークID (半角英数、後から変更不可)</label><input type="text" id="id" placeholder="例: google" required></div>
+            <div><label for="host_pattern">ホスト名パターン</label><input type="text" id="host_pattern" placeholder="例: .google." required></div>
+            <div><label for="query_param">標準の検索パラメータ名</label><input type="text" id="query_param" placeholder="例: q" required></div>
+            <div><label for="icon">アイコン (PNG/JPG, 32x32推奨)</label><input type="file" id="icon" accept="image/*"></div>
+        </div>
+        <h3>検索タイプ別設定</h3>
+        <p class="form-help">識別子の書式: <code>type:value</code> (例: <code>path:/search</code>, <code>param:tbm=isch</code>)</p>
+        <div class="form-grid">
+            <div class="form-section"><h4>ウェブ検索</h4><label for="web_search_url">URL</label><input type="text" id="web_search_url"><label for="web_identifier">識別子</label><input type="text" id="web_identifier"></div>
+            <div class="form-section"><h4>画像検索</h4><label for="image_search_url">URL</label><input type="text" id="image_search_url"><label for="image_identifier">識別子</label><input type="text" id="image_identifier"></div>
+            <div class="form-section"><h4>動画検索</h4><label for="video_search_url">URL</label><input type="text" id="video_search_url"><label for="video_identifier">識別子</label><input type="text" id="video_identifier"></div>
+            <div class="form-section"><h4>ニュース検索</h4><label for="news_search_url">URL</label><input type="text" id="news_search_url"><label for="news_identifier">識別子</label><input type="text" id="news_identifier"></div>
+        </div>
+        <div class="full-width form-actions"><button type="submit">この内容で保存</button><button type="button" id="clear-form">フォームをクリア</button></div>
+    </form>
+</div>
+
+<div id="status"></div>
+
+<h2>登録済みエンジン一覧</h2>
+<table id="engine-list">
+    <thead><tr><th>エンジン名</th><th>ID</th><th>ホスト名</th><th>アイコン</th><th>操作</th></tr></thead>
+    <tbody></tbody>
+</table>
+
+<div class="footer-actions">
+    <a href="options.html" class="button">リンク設定ページに戻る</a>
+</div>
+
+<script src="js/jquery-1.11.2.min.js"></script>
+<script src="engine_editor.js"></script>
+
+</body>
+</html>

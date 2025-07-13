@@ -1,0 +1,54 @@
+{
+  "manifest_version": 3,
+  "name": "Search Switcher",
+  "version": "3.0",
+  "description": "検索エンジンごとに表示する切替先ボタンをグラフィカルなUIで自由に設定できます。",
+  "homepage_url": "https://github.com/kazaminosuke/GoogleToBing_Edge",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "action": {
+    "default_title": "リンク設定を開く",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*/*"
+      ],
+      "js": [
+        "js/jquery-1.11.2.min.js",
+        "js/jquery-ui.min.js",
+        "SearchSwitcher.js"
+      ],
+      "css": [
+        "content_style.css"
+      ]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/*"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
+}

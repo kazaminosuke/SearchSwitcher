@@ -1,0 +1,167 @@
+/* options_style.css (For both options.html and engine_editor.html) */
+
+/* 基本設定 */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    padding: 20px 40px;
+    background-color: #f7f7f7;
+    color: #333;
+    line-height: 1.6;
+    max-width: 1200px;
+    margin: auto;
+}
+h1, h2, h3 {
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 10px;
+    color: #111;
+}
+p {
+    color: #555;
+    font-size: 14px;
+}
+hr {
+    border: none;
+    border-top: 1px solid #e0e0e0;
+    margin: 30px 0;
+}
+
+/* プリセット追加セクションのスタイル */
+.preset-adder {
+    margin-bottom: 20px;
+}
+.presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+.preset-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+    width: 120px;
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+.preset-card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+.preset-card img {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 10px;
+}
+.preset-card div {
+    font-weight: 500;
+    margin-bottom: 10px;
+    font-size: 14px;
+    word-break: break-word;
+}
+.preset-card button {
+    width: 100%;
+    padding: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background-color: #007bff;
+    color: #fff;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+.preset-card button:hover:not(:disabled) {
+    background-color: #0056b3;
+}
+.preset-card button:disabled {
+    background-color: #e9ecef;
+    color: #6c757d;
+    cursor: not-allowed;
+    border-color: #e0e0e0;
+}
+
+/* リンク設定ページのスタイル */
+.link-config-container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.engine-row { display: flex; align-items: center; padding: 15px 10px; border-bottom: 1px solid #f0f0f0; }
+.engine-row:last-child { border-bottom: none; }
+.engine-label { flex: 0 0 180px; font-size: 16px; font-weight: 600; display: flex; align-items: center; }
+.engine-label img { width: 24px; height: 24px; margin-right: 12px; }
+.arrow-separator { font-size: 24px; color: #aaa; margin: 0 20px; }
+.targets-container { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; }
+.target-selector { display: flex; align-items: center; background-color: #f9fafb; padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 6px; }
+.target-selector input[type="checkbox"] { width: 16px; height: 16px; margin-right: 8px; cursor: pointer; accent-color: #007bff; }
+.target-selector select { padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px; cursor: pointer; background-color: #fff; }
+
+/* フッターボタン (将来の編集ページ用) */
+.footer-actions { margin-top: 25px; text-align: right; }
+.footer-actions .button, .footer-actions button { display: inline-block; padding: 10px 20px; font-size: 15px; font-weight: 500; background-color: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; text-decoration: none; transition: background-color 0.2s; }
+.footer-actions .button:hover, .footer-actions button:hover { background-color: #0056b3; }
+
+/* テーブルのスタイル (エンジン管理ページ用) */
+table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px; background-color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
+th, td { border-bottom: 1px solid #e5e7eb; padding: 12px 15px; text-align: left; vertical-align: middle; }
+th { background-color: #f9fafb; font-weight: 600; color: #374151; }
+td button { padding: 6px 12px; font-size: 12px; border: none; border-radius: 4px; cursor: pointer; color: #fff; font-weight: 500; }
+td .edit-btn { background-color: #ffc107; color: #212529; }
+td .delete-btn { background-color: #dc3545; margin-left: 5px; }
+
+/* フォームのスタイル (エンジン管理ページ用) */
+.form-section-wrapper { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 30px; }
+.form label { font-weight: 600; display: block; margin-bottom: 5px; font-size: 14px; }
+.form input[type="text"], .form input[type="file"], .form button { padding: 10px; font-size: 14px; width: 100%; box-sizing: border-box; border: 1px solid #d1d5db; border-radius: 6px; }
+.form input[type="file"] { padding: 8px; }
+.form input:disabled { background-color: #e9ecef; cursor: not-allowed; color: #6c757d; }
+.form .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px 20px; }
+.form .form-section { border: 1px solid #e5e7eb; padding: 15px; border-radius: 6px; }
+.form .full-width { grid-column: 1 / -1; }
+.form .form-help { font-size: 12px; color: #555; margin-top: -10px; margin-bottom: 15px; }
+.form .form-actions { margin-top: 20px; display: flex; gap: 10px; }
+.form .form-actions button { flex-grow: 1; color: #fff; border: none; cursor: pointer; transition: background-color 0.2s; font-weight: 500; }
+.form button[type="submit"] { background-color: #28a745; }
+.form button[type="submit"]:hover { background-color: #218838; }
+.form button[type="button"] { background-color: #6c757d; }
+.form button[type="button"]:hover { background-color: #5a6268; }
+
+/* ステータスメッセージ */
+#status { margin: 20px 0; font-weight: bold; color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; padding: 12px; border-radius: 6px; text-align: center; display: none; }
+/* options_style.css の末尾に追加 */
+
+.preset-management {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+.preset-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+.preset-buttons button {
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+}
+.preset-buttons button:hover {
+    background-color: #e7e7e7;
+}
+.subtle-hr {
+    margin: 20px 0;
+    border-color: #f0f0f0;
+}
+.preset-management input, .preset-management select, .preset-management button {
+    padding: 8px 12px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-right: 10px;
+}
+.preset-management .delete-btn {
+    background-color: #dc3545;
+    color: white;
+}

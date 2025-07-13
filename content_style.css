@@ -1,0 +1,41 @@
+/* content_style.css (Vertical Button Layout) */
+
+#search-switcher-container {
+    position: fixed !important;
+    bottom: 20px !important;
+    right: 20px !important;
+    z-index: 2147483647 !important;
+    cursor: move !important;
+    
+    /* ▼▼▼ ここを変更 ▼▼▼ */
+    display: flex !important;
+    flex-direction: column !important; /* 並べる方向を「縦」に設定 */
+    align-items: flex-end; /* 右揃えにする */
+    gap: 10px; /* ボタン間の隙間 */
+}
+
+#search-switcher-container a.switcher-fab {
+    display: block !important;
+    width: 56px !important;
+    height: 56px !important;
+    border-radius: 50% !important;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23) !important;
+    background-size: 60% !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    cursor: pointer !important;
+    box-sizing: border-box !important;
+    text-decoration: none !important;
+    transition: transform 0.2s ease-in-out !important;
+
+    /* デザインの指定 */
+    background-color: #ffffff !important;
+    border: 2px solid #000000 !important;
+
+    /* ▼▼▼ 横並び用のマージンは不要なので削除 ▼▼▼ */
+    /* margin: 0 5px !important; */
+}
+
+#search-switcher-container a.switcher-fab:hover {
+    transform: scale(1.1);
+}
