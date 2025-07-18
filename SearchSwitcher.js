@@ -1,4 +1,4 @@
-// SearchSwitcher.js (Enhanced SPA Support)
+// SearchSwitcher.js (Same-Tab Navigation Fix)
 
 (function() {
     if (window.hasRunSearchSwitcher) return;
@@ -11,6 +11,7 @@
     let currentEngine = null;
     let runTimeout = null;
 
+    // --- 1. 設定読み込みから5. リンク生成までの関数群 (変更なし) ---
     function loadConfig() {
         return new Promise(resolve => {
             chrome.storage.sync.get(['engines', 'buttonPosition'], (items) => {
@@ -75,6 +76,7 @@
         return links;
     }
 
+    // --- 6. UI生成関数 (クリックイベントを制御) ---
     function createOrUpdateUI(links) {
         $('#search-switcher-container').remove();
         if (links.length === 0) return;
@@ -84,6 +86,17 @@
                 'href': link.url,
                 'title': `Switch to ${link.name}`
             }).css('background-image', `url("${link.icon}")`);
+
+            // ▼▼▼ ここが重要 ▼▼▼
+            // クリックイベントを乗っ取り、手動でページ遷移させる
+            button.on('click', function(event) {
+                // 1. 本来のリンクとしての動作をキャンセル
+                event.preventDefault();
+                // 2. JavaScriptで現在のタブのURLを書き換える
+                window.location.href = this.href;
+            });
+            // ▲▲▲ 修正ここまで ▲▲▲
+
             container.append(button);
         });
         container.draggable({
@@ -100,6 +113,7 @@
         $('body').append(container);
     }
     
+    // --- 7. メインの実行関数 (変更なし) ---
     const run = () => {
         if (!currentEngine) return;
         let query;
@@ -131,6 +145,7 @@
         createOrUpdateUI(links);
     };
 
+    // --- 8. 初期化と監視のロジック (変更なし) ---
     async function initialize() {
         await loadConfig();
         currentEngine = findCurrentEngine();
