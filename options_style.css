@@ -150,6 +150,14 @@ td .delete-btn { background-color: #dc3545; margin-left: 5px; }
 .preset-buttons button:hover {
     background-color: #e7e7e7;
 }
+#reset-default-btn {
+    background-color: #007bff;
+    color: #fff;
+    border-color: #007bff;
+}
+#reset-default-btn:hover {
+    background-color: #0056b3;
+}
 .subtle-hr {
     margin: 20px 0;
     border-color: #f0f0f0;

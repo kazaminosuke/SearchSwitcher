@@ -1,67 +1,99 @@
-// options.js (with Export/Import feature - Full Code)
-$(function() {
+// options.js — vanilla JS (エクスポート/インポート・プリセット・デフォルト復元)
+document.addEventListener('DOMContentLoaded', function () {
     let engines = [];
     let linkPresets = {};
     const MAX_TARGETS = 5;
 
+    const $ = (sel, root) => (root || document).querySelector(sel);
+    const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
+
     function restoreOptions() {
         chrome.storage.sync.get({ engines: [], linkPresets: {} }, (items) => {
             if (!items.engines || items.engines.length === 0) {
-                $('#link-config-container').html('<p>エンジンが登録されていません。「エンジンリストを管理する」ボタンから、まずはエンジンを追加してください。</p>');
+                $('#link-config-container').innerHTML =
+                    '<p>エンジンが登録されていません。「デフォルト設定に戻す」を押すか、「エンジンリストを管理する」から追加してください。</p>';
+                engines = [];
             } else {
                 engines = items.engines;
                 renderLinkConfigUI();
             }
-            linkPresets = items.linkPresets;
+            linkPresets = items.linkPresets || {};
             renderCustomPresets();
         });
     }
 
     function renderLinkConfigUI() {
         const container = $('#link-config-container');
-        container.empty();
+        container.innerHTML = '';
         engines.forEach(sourceEngine => {
-            const row = $('<div class="engine-row"></div>');
-            const label = $(`<div class="engine-label"><img src="${sourceEngine.icon}"><span>${sourceEngine.name}</span></div>`);
-            const arrow = $('<div class="arrow-separator">→</div>');
-            const targetsContainer = $('<div class="targets-container"></div>');
+            const row = document.createElement('div');
+            row.className = 'engine-row';
+
+            const label = document.createElement('div');
+            label.className = 'engine-label';
+            const img = document.createElement('img');
+            img.src = sourceEngine.icon;
+            const span = document.createElement('span');
+            span.textContent = sourceEngine.name;
+            label.append(img, span);
+
+            const arrow = document.createElement('div');
+            arrow.className = 'arrow-separator';
+            arrow.textContent = '→';
+
+            const targets = document.createElement('div');
+            targets.className = 'targets-container';
             for (let i = 0; i < MAX_TARGETS; i++) {
-                targetsContainer.append(createTargetSelector(sourceEngine, i));
+                targets.appendChild(createTargetSelector(sourceEngine, i));
             }
-            row.append(label, arrow, targetsContainer);
-            container.append(row);
+
+            row.append(label, arrow, targets);
+            container.appendChild(row);
         });
     }
 
     function createTargetSelector(sourceEngine, index) {
-        const selectorContainer = $('<div class="target-selector"></div>');
-        const checkbox = $('<input type="checkbox" class="is-floating-btn">').attr({'data-source-id': sourceEngine.id, 'data-target-index': index });
-        const select = $('<select class="target-select"></select>').attr({'data-source-id': sourceEngine.id, 'data-target-index': index });
-        select.append('<option value="">なし</option>');
+        const wrap = document.createElement('div');
+        wrap.className = 'target-selector';
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'is-floating-btn';
+        checkbox.dataset.sourceId = sourceEngine.id;
+        checkbox.dataset.targetIndex = index;
+
+        const select = document.createElement('select');
+        select.className = 'target-select';
+        select.dataset.sourceId = sourceEngine.id;
+        select.dataset.targetIndex = index;
+        select.appendChild(new Option('なし', ''));
         engines.forEach(targetEngine => {
             if (sourceEngine.id === targetEngine.id) return;
-            select.append(`<option value="${targetEngine.id}">${targetEngine.name}</option>`);
+            select.appendChild(new Option(targetEngine.name, targetEngine.id));
         });
-        const targetInfo = (sourceEngine.allowed_targets && sourceEngine.allowed_targets[index]) ? sourceEngine.allowed_targets[index] : {};
-        const targetId = targetInfo.id || "";
-        const isFloating = targetInfo.is_floating || false;
-        select.val(targetId);
-        checkbox.prop('checked', isFloating && !!targetId);
-        checkbox.prop('disabled', !targetId);
-        selectorContainer.append(checkbox, select);
-        return selectorContainer;
+
+        const targetInfo = (sourceEngine.allowed_targets && sourceEngine.allowed_targets[index]) || {};
+        const targetId = targetInfo.id || '';
+        select.value = targetId;
+        checkbox.checked = !!(targetInfo.is_floating && targetId);
+        checkbox.disabled = !targetId;
+
+        wrap.append(checkbox, select);
+        return wrap;
     }
 
-    $('.apply-preset-btn').on('click', function() {
-        const type = $(this).data('preset-type');
-        if (!confirm(`現在のリンク設定が「${$(this).text()}」で上書きされます。よろしいですか？`)) return;
-        switch(type) {
-            case 'hub-spoke': applyHubSpokePreset('google'); break;
-            case 'ring': applyRingPreset(); break;
-            case 'full-mesh': applyFullMeshPreset(); break;
-        }
-        saveEngines();
-        renderLinkConfigUI();
+    // --- 代表的なリンク設定パターン ---
+    $$('.apply-preset-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            if (engines.length === 0) { alert('先にエンジンを追加してください。'); return; }
+            const type = btn.dataset.presetType;
+            if (!confirm(`現在のリンク設定が「${btn.textContent}」で上書きされます。よろしいですか？`)) return;
+            if (type === 'hub-spoke') applyHubSpokePreset('google');
+            else if (type === 'ring') applyRingPreset();
+            else if (type === 'full-mesh') applyFullMeshPreset();
+            saveEngines();
+            renderLinkConfigUI();
+        });
     });
 
     function applyHubSpokePreset(hubId) {
@@ -69,7 +101,8 @@ $(function() {
         if (!hubId) return;
         engines.forEach(engine => {
             if (engine.id === hubId) {
-                engine.allowed_targets = engines.filter(e => e.id !== hubId).slice(0, MAX_TARGETS).map(target => ({ id: target.id, is_floating: true }));
+                engine.allowed_targets = engines.filter(e => e.id !== hubId).slice(0, MAX_TARGETS)
+                    .map(t => ({ id: t.id, is_floating: true }));
             } else {
                 engine.allowed_targets = [{ id: hubId, is_floating: true }];
             }
@@ -77,71 +110,80 @@ $(function() {
     }
 
     function applyRingPreset() {
-        const engineIds = engines.map(e => e.id);
-        if (engineIds.length < 2) return;
+        const ids = engines.map(e => e.id);
+        if (ids.length < 2) return;
         engines.forEach((engine, index) => {
-            const nextIndex = (index + 1) % engineIds.length;
-            engine.allowed_targets = [{ id: engineIds[nextIndex], is_floating: true }];
+            engine.allowed_targets = [{ id: ids[(index + 1) % ids.length], is_floating: true }];
         });
     }
-    
+
     function applyFullMeshPreset() {
         engines.forEach(engine => {
-            engine.allowed_targets = engines.filter(e => e.id !== engine.id).slice(0, MAX_TARGETS).map(target => ({ id: target.id, is_floating: true }));
+            engine.allowed_targets = engines.filter(e => e.id !== engine.id).slice(0, MAX_TARGETS)
+                .map(t => ({ id: t.id, is_floating: true }));
         });
     }
 
+    // --- デフォルト設定に戻す（既定エンジン＋「標準」リンク設定） ---
+    $('#reset-default-btn').addEventListener('click', function () {
+        if (!confirm('エンジンリストとリンク設定を、すべて初期状態（標準）に戻します。よろしいですか？')) return;
+        engines = self.SearchSwitcherDefaults.buildDefaultEngines();
+        chrome.storage.sync.set({ engines: engines }, () => {
+            renderLinkConfigUI();
+            alert('デフォルト設定（標準）に戻しました。');
+        });
+    });
+
+    // --- カスタムプリセット ---
     function renderCustomPresets() {
         const select = $('#custom-preset-select');
-        select.empty().append('<option value="">-- 保存したプリセット --</option>');
-        for (const name in linkPresets) {
-            select.append($('<option></option>').val(name).text(name));
-        }
+        select.innerHTML = '';
+        select.appendChild(new Option('-- 保存したプリセット --', ''));
+        Object.keys(linkPresets).forEach(name => select.appendChild(new Option(name, name)));
     }
 
-    $('#save-custom-preset-btn').on('click', function() {
-        const name = $('#custom-preset-name').val().trim();
+    $('#save-custom-preset-btn').addEventListener('click', function () {
+        const name = $('#custom-preset-name').value.trim();
         if (!name) { alert('プリセット名を入力してください。'); return; }
-        const currentLinkConfig = engines.map(e => ({ id: e.id, allowed_targets: e.allowed_targets || [] }));
-        linkPresets[name] = currentLinkConfig;
-        chrome.storage.sync.set({ linkPresets: linkPresets }, () => {
+        linkPresets[name] = engines.map(e => ({ id: e.id, allowed_targets: e.allowed_targets || [] }));
+        chrome.storage.sync.set({ linkPresets }, () => {
             alert(`リンク設定「${name}」が保存されました。`);
-            $('#custom-preset-name').val('');
+            $('#custom-preset-name').value = '';
             renderCustomPresets();
         });
     });
 
-    $('#load-custom-preset-btn').on('click', function() {
-        const name = $('#custom-preset-select').val();
+    $('#load-custom-preset-btn').addEventListener('click', function () {
+        const name = $('#custom-preset-select').value;
         if (!name) { alert('読み込むプリセットを選択してください。'); return; }
         if (!confirm(`リンク設定が「${name}」の内容で上書きされます。よろしいですか？`)) return;
-        const loadedConfig = linkPresets[name];
+        const loaded = linkPresets[name];
         engines.forEach(engine => {
-            const savedSetting = loadedConfig.find(s => s.id === engine.id);
-            engine.allowed_targets = savedSetting ? savedSetting.allowed_targets : [];
+            const saved = loaded.find(s => s.id === engine.id);
+            engine.allowed_targets = saved ? saved.allowed_targets : [];
         });
         saveEngines();
         renderLinkConfigUI();
     });
-    
-    $('#delete-custom-preset-btn').on('click', function() {
-        const name = $('#custom-preset-select').val();
+
+    $('#delete-custom-preset-btn').addEventListener('click', function () {
+        const name = $('#custom-preset-select').value;
         if (!name) { alert('削除するプリセットを選択してください。'); return; }
         if (!confirm(`リンク設定プリセット「${name}」を完全に削除します。よろしいですか？`)) return;
         delete linkPresets[name];
-        chrome.storage.sync.set({ linkPresets: linkPresets }, () => {
+        chrome.storage.sync.set({ linkPresets }, () => {
             alert(`プリセット「${name}」が削除されました。`);
             renderCustomPresets();
         });
     });
-    
-    $('#export-presets-btn').on('click', function() {
+
+    // --- エクスポート / インポート ---
+    $('#export-presets-btn').addEventListener('click', function () {
         if (Object.keys(linkPresets).length === 0) {
             alert('エクスポートするカスタムプリセットがありません。');
             return;
         }
-        const dataStr = JSON.stringify(linkPresets, null, 2);
-        const blob = new Blob([dataStr], {type: "application/json"});
+        const blob = new Blob([JSON.stringify(linkPresets, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -152,67 +194,63 @@ $(function() {
         URL.revokeObjectURL(url);
     });
 
-    $('#import-presets-btn').on('click', function() {
-        $('#import-file-input').click();
-    });
-    
-    $('#import-file-input').on('change', function(event) {
+    $('#import-presets-btn').addEventListener('click', () => $('#import-file-input').click());
+
+    $('#import-file-input').addEventListener('change', function (event) {
         const file = event.target.files[0];
         if (!file) return;
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = function (e) {
             try {
-                const importedPresets = JSON.parse(e.target.result);
-                if (typeof importedPresets !== 'object' || importedPresets === null) {
-                    throw new Error('無効なファイル形式です。');
-                }
+                const imported = JSON.parse(e.target.result);
+                if (typeof imported !== 'object' || imported === null) throw new Error('無効なファイル形式です。');
                 if (!confirm('現在のカスタムプリセットに、インポートした設定をマージ（追加・上書き）します。よろしいですか？')) {
-                    $('#import-file-input').val('');
+                    $('#import-file-input').value = '';
                     return;
                 }
-                const newPresets = { ...linkPresets, ...importedPresets };
-                linkPresets = newPresets;
-                chrome.storage.sync.set({ linkPresets: linkPresets }, () => {
+                linkPresets = Object.assign({}, linkPresets, imported);
+                chrome.storage.sync.set({ linkPresets }, () => {
                     alert('プリセットが正常にインポートされました。');
                     renderCustomPresets();
                 });
             } catch (error) {
                 alert('ファイルの読み込みに失敗しました。有効なJSONファイルを選択してください。\nエラー: ' + error.message);
             } finally {
-                $('#import-file-input').val('');
+                $('#import-file-input').value = '';
             }
         };
         reader.readAsText(file);
     });
 
-    $('#link-config-container').on('change', '.target-select, .is-floating-btn', function() {
-        const sourceId = $(this).data('source-id');
-        const sourceEngine = engines.find(e => e.id === sourceId);
+    // --- リンク設定の変更を保存 ---
+    $('#link-config-container').addEventListener('change', function (e) {
+        if (!e.target.matches('.target-select, .is-floating-btn')) return;
+        const sourceId = e.target.dataset.sourceId;
+        const sourceEngine = engines.find(en => en.id === sourceId);
         if (!sourceEngine) return;
-        const new_allowed_targets = [];
-        $(`.target-select[data-source-id="${sourceId}"]`).each(function(index) {
-            const targetId = $(this).val();
+
+        const newTargets = [];
+        $$(`.target-select[data-source-id="${sourceId}"]`).forEach((sel, index) => {
+            const targetId = sel.value;
             const checkbox = $(`.is-floating-btn[data-source-id="${sourceId}"][data-target-index="${index}"]`);
             if (targetId) {
-                const isFloating = checkbox.is(':checked');
-                new_allowed_targets[index] = { id: targetId, is_floating: isFloating };
-                checkbox.prop('disabled', false);
+                newTargets[index] = { id: targetId, is_floating: checkbox.checked };
+                checkbox.disabled = false;
             } else {
-                 new_allowed_targets[index] = null;
-                 checkbox.prop('checked', false).prop('disabled', true);
+                newTargets[index] = null;
+                checkbox.checked = false;
+                checkbox.disabled = true;
             }
         });
-        sourceEngine.allowed_targets = new_allowed_targets.filter(t => t !== null);
+        sourceEngine.allowed_targets = newTargets.filter(t => t !== null);
         saveEngines();
     });
 
     function saveEngines() {
-        chrome.storage.sync.set({ engines: engines }, () => {
-            console.log("Settings automatically saved:", engines);
-        });
+        chrome.storage.sync.set({ engines: engines });
     }
-    
-    $('#edit-engines-btn').on('click', function() {
+
+    $('#edit-engines-btn').addEventListener('click', function () {
         chrome.tabs.create({ url: 'engine_editor.html' });
     });
 

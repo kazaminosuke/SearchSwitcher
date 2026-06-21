@@ -1,17 +1,17 @@
-// SearchSwitcher.js (Same-Tab Navigation Fix)
-
-(function() {
+// SearchSwitcher.js — vanilla JS (jQuery / jQuery UI への依存を撤廃)
+(function () {
     if (window.hasRunSearchSwitcher) return;
     window.hasRunSearchSwitcher = true;
 
-    let config = {
+    const config = {
         engines: [],
         buttonPosition: { bottom: 20, right: 20 }
     };
     let currentEngine = null;
     let runTimeout = null;
+    let dragState = null;
 
-    // --- 1. 設定読み込みから5. リンク生成までの関数群 (変更なし) ---
+    // --- 1. 設定読み込み ---
     function loadConfig() {
         return new Promise(resolve => {
             chrome.storage.sync.get(['engines', 'buttonPosition'], (items) => {
@@ -21,23 +21,25 @@
             });
         });
     }
+
     function findCurrentEngine() {
         const hostname = location.hostname;
         if (!config.engines) return null;
-        return config.engines.find(engine => hostname.includes(engine.host_pattern));
+        return config.engines.find(engine => hostname.includes(engine.host_pattern)) || null;
     }
+
     function getParameterByName(name, urlString) {
         if (!urlString) urlString = window.location.href;
         try {
             const url = new URL(urlString);
-            let params = url.searchParams;
             if (url.hash) {
                 const hashParams = new URLSearchParams(url.hash.substring(1));
                 if (hashParams.has(name)) return hashParams.get(name);
             }
-            return params.get(name);
+            return url.searchParams.get(name);
         } catch (e) { return null; }
     }
+
     function getCurrentSearchType(engine) {
         const urlString = window.location.href;
         const path = window.location.pathname;
@@ -57,123 +59,159 @@
         }
         return 'web';
     }
-    function generateTargetLinks(currentEngine, currentSearchType, query) {
-        if (!query || !currentEngine.allowed_targets || !Array.isArray(currentEngine.allowed_targets)) return [];
+
+    function generateTargetLinks(sourceEngine, currentSearchType, query) {
+        if (!query || !Array.isArray(sourceEngine.allowed_targets)) return [];
         const links = [];
-        currentEngine.allowed_targets.forEach(targetInfo => {
+        sourceEngine.allowed_targets.forEach(targetInfo => {
             if (!targetInfo || !targetInfo.is_floating) return;
             const targetEngine = config.engines.find(e => e.id === targetInfo.id);
             if (!targetEngine) return;
-            const targetTypeSettings = targetEngine.search_types?.[currentSearchType];
-            if (targetTypeSettings && targetTypeSettings.url && targetTypeSettings.url.trim() !== '') {
-                 const url = targetTypeSettings.url.replace('{q}', encodeURIComponent(query));
-                 links.push({ name: `${targetEngine.name}`, url: url, icon: targetEngine.icon });
-            } else if (targetEngine.search_types?.web?.url && targetEngine.search_types.web.url.trim() !== '') {
-                const url = targetEngine.search_types.web.url.replace('{q}', encodeURIComponent(query));
-                links.push({ name: `${targetEngine.name}`, url: url, icon: targetEngine.icon });
-            }
+            const typeSettings = targetEngine.search_types?.[currentSearchType];
+            const webSettings = targetEngine.search_types?.web;
+            const chosen = (typeSettings && typeSettings.url && typeSettings.url.trim() !== '')
+                ? typeSettings
+                : (webSettings && webSettings.url && webSettings.url.trim() !== '' ? webSettings : null);
+            if (!chosen) return;
+            links.push({
+                name: targetEngine.name,
+                url: chosen.url.replace('{q}', encodeURIComponent(query)),
+                icon: targetEngine.icon
+            });
         });
         return links;
     }
 
-    // --- 6. UI生成関数 (クリックイベントを制御) ---
-    function createOrUpdateUI(links) {
-        $('#search-switcher-container').remove();
-        if (links.length === 0) return;
-        const container = $('<div id="search-switcher-container"></div>');
-        links.forEach(link => {
-            const button = $('<a></a>').addClass('switcher-fab').attr({
-                'href': link.url,
-                'title': `Switch to ${link.name}`
-            }).css('background-image', `url("${link.icon}")`);
-
-            // ▼▼▼ ここが重要 ▼▼▼
-            // クリックイベントを乗っ取り、手動でページ遷移させる
-            button.on('click', function(event) {
-                // 1. 本来のリンクとしての動作をキャンセル
-                event.preventDefault();
-                // 2. JavaScriptで現在のタブのURLを書き換える
-                window.location.href = this.href;
-            });
-            // ▲▲▲ 修正ここまで ▲▲▲
-
-            container.append(button);
-        });
-        container.draggable({
-            containment: "window", handle: container,
-            stop: (event, ui) => {
-                const pos = { bottom: $(window).height() - ui.position.top - container.height(), right: $(window).width() - ui.position.left - container.width() };
-                chrome.storage.sync.set({ buttonPosition: pos });
-            }
-        });
-        container.css({
-            'right': config.buttonPosition.right + 'px',
-            'bottom': config.buttonPosition.bottom + 'px',
-        });
-        $('body').append(container);
+    // --- 2. ドラッグ処理（クリックとドラッグを区別する） ---
+    function onPointerMove(e) {
+        if (!dragState) return;
+        const { container, sx, sy, oR, oB } = dragState;
+        const dx = e.clientX - sx;
+        const dy = e.clientY - sy;
+        if (!dragState.dragging && Math.hypot(dx, dy) > 5) dragState.dragging = true;
+        if (dragState.dragging) {
+            const right = Math.max(0, Math.min(oR - dx, window.innerWidth - container.offsetWidth));
+            const bottom = Math.max(0, Math.min(oB - dy, window.innerHeight - container.offsetHeight));
+            container.style.right = right + 'px';
+            container.style.bottom = bottom + 'px';
+        }
     }
-    
-    // --- 7. メインの実行関数 (変更なし) ---
-    const run = () => {
+
+    function onPointerUp() {
+        if (!dragState) return;
+        const c = dragState.container;
+        if (dragState.dragging) {
+            c._dragged = true;
+            config.buttonPosition = { right: parseInt(c.style.right, 10), bottom: parseInt(c.style.bottom, 10) };
+            chrome.storage.sync.set({ buttonPosition: config.buttonPosition });
+        }
+        dragState = null;
+    }
+
+    document.addEventListener('pointermove', onPointerMove, true);
+    document.addEventListener('pointerup', onPointerUp, true);
+
+    // --- 3. UI生成 ---
+    function createOrUpdateUI(links) {
+        const old = document.getElementById('search-switcher-container');
+        if (old) old.remove();
+        if (links.length === 0) return;
+
+        const container = document.createElement('div');
+        container.id = 'search-switcher-container';
+        container.style.right = config.buttonPosition.right + 'px';
+        container.style.bottom = config.buttonPosition.bottom + 'px';
+
+        links.forEach(link => {
+            const a = document.createElement('a');
+            a.className = 'switcher-fab';
+            a.href = link.url;
+            a.title = `Switch to ${link.name}`;
+            a.style.backgroundImage = `url("${link.icon}")`;
+            a.addEventListener('click', (event) => {
+                event.preventDefault();
+                if (container._dragged) return; // 直前にドラッグした場合は遷移しない
+                window.location.href = a.href;
+            });
+            container.appendChild(a);
+        });
+
+        container.addEventListener('pointerdown', (e) => {
+            container._dragged = false;
+            dragState = {
+                container,
+                sx: e.clientX,
+                sy: e.clientY,
+                oR: parseInt(container.style.right, 10) || config.buttonPosition.right,
+                oB: parseInt(container.style.bottom, 10) || config.buttonPosition.bottom,
+                dragging: false
+            };
+        });
+
+        document.body.appendChild(container);
+    }
+
+    // --- 4. メインの実行関数 ---
+    function run() {
         if (!currentEngine) return;
         let query;
         switch (currentEngine.id) {
             case 'startpage':
-                query = $('#q').val() || $('#query').val();
+                query = document.querySelector('#q')?.value || document.querySelector('#query')?.value;
                 break;
             case 'wikipedia_ja':
-            case 'uncyclopedia_ja':
+            case 'uncyclopedia_ja': {
                 const path = window.location.pathname;
                 if (path.startsWith('/wiki/')) {
                     query = decodeURIComponent(path.substring(6).replace(/_/g, ' '));
                 } else {
                     query = getParameterByName(currentEngine.query_param);
                 }
-                if (!query) query = $('h1#firstHeading, h1.page-title-main').text();
-                if (!query) query = $('#searchInput').val();
+                if (!query) query = document.querySelector('h1#firstHeading, h1.page-title-main')?.textContent;
+                if (!query) query = document.querySelector('#searchInput')?.value;
                 break;
+            }
             default:
                 query = getParameterByName(currentEngine.query_param);
                 break;
         }
         if (!query || query.trim() === '') {
-            $('#search-switcher-container').remove();
+            const el = document.getElementById('search-switcher-container');
+            if (el) el.remove();
             return;
         }
         const currentSearchType = getCurrentSearchType(currentEngine);
         const links = generateTargetLinks(currentEngine, currentSearchType, query);
         createOrUpdateUI(links);
-    };
+    }
 
-    // --- 8. 初期化と監視のロジック (変更なし) ---
+    // --- 5. 初期化とSPA向けURL監視 ---
     async function initialize() {
         await loadConfig();
         currentEngine = findCurrentEngine();
         if (!currentEngine) return;
         run();
+
         let lastUrl = location.href;
         new MutationObserver(() => {
             if (location.href !== lastUrl) {
                 lastUrl = location.href;
                 currentEngine = findCurrentEngine();
                 if (runTimeout) clearTimeout(runTimeout);
-                runTimeout = setTimeout(run, 300); 
+                runTimeout = setTimeout(run, 300);
             }
         }).observe(document.documentElement, { childList: true, subtree: true });
     }
 
-    $(document).ready(function() {
-        if (document.body) {
-            initialize();
-        } else {
-            const readyObserver = new MutationObserver(() => {
-                if (document.body) {
-                    initialize();
-                    readyObserver.disconnect();
-                }
-            });
-            readyObserver.observe(document.documentElement, { childList: true });
-        }
-    });
-
+    if (document.body) {
+        initialize();
+    } else {
+        const readyObserver = new MutationObserver(() => {
+            if (document.body) {
+                readyObserver.disconnect();
+                initialize();
+            }
+        });
+        readyObserver.observe(document.documentElement, { childList: true });
+    }
 })();
