@@ -1,7 +1,7 @@
 {
-  "manifest_version": 3.1,
+  "manifest_version": 3,
   "name": "Search Switcher",
-  "version": "3.0",
+  "version": "3.1",
   "description": "検索エンジンごとに表示する切替先ボタンをグラフィカルなUIで自由に設定できます。",
   "homepage_url": "https://github.com/kazaminosuke/GoogleToBing_Edge",
   "icons": {
